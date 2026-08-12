@@ -32,7 +32,7 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 | `bun run build`      | Type-check and build for production (`dist/`) |
 | `bun run preview`    | Preview production build on port 3001         |
 | `bun run checks`     | Type-check, lint and format check             |
-| `bun run typecheck`  | Run `tsc -b`                                  |
+| `bun run typecheck`  | Type-check with TypeScript 7                  |
 | `bun run lint`       | Run ESLint                                    |
 | `bun run format:fix` | Format with Prettier                          |
 
@@ -40,7 +40,8 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 ## Tech Stack
 
-- **Build**: [Vite](https://vite.dev/) 8 + [TypeScript](https://www.typescriptlang.org/) 6
+- **Build**: [Vite](https://vite.dev/) 8 + [TypeScript](https://www.typescriptlang.org/) 7 — TypeScript 6
+  is also installed, since typescript-eslint needs the v6 API until 7.1 (see AGENTS.md)
 - **UI**: [React](https://react.dev/) 19 + [React Router](https://reactrouter.com/) 8
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) 4 + [DaisyUI](https://daisyui.com/) 5 — configured
   in CSS (`src/index.css`); there is no `tailwind.config.ts`
