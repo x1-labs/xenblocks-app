@@ -27,7 +27,7 @@ export function SearchBar({ isLoading }: SearchBarProps) {
       onSubmit={handleSearchClick}
       className={`sm:mx-0 opacity-0 ${!isLoading ? "fade-in" : ""}`}
     >
-      <label className="input input-bordered py-0 input-sm flex items-center gap-2 my-3 ">
+      <label className="input py-0 input-sm flex items-center gap-2 my-3 ">
         <input
           type="text"
           className="grow sm:w-[250px] lg:focus:w-[400px]"

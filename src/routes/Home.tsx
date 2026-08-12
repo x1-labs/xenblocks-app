@@ -1,5 +1,4 @@
 import { NavBar } from "@/components/NavBar";
-import "react-medium-image-zoom/dist/styles.css";
 import Footer from "@/components/Footer";
 import { SiGitbook } from "react-icons/si";
 import { Section } from "@/components/Section";
@@ -18,8 +17,7 @@ export default function Home() {
                 <div>ACCESSIBLE TO EVERYONE</div>
               </h1>
               <p className="mb-12 max-w-lg uppercase leading-loose md:leading-loose lg:leading-loose text-justify text-xs sm:text-left lg:text-lg">
-                XenBLOCKs serve as a Proof-of-Work (PoW) token on the X1
-                blockchain
+                XenBLOCKs serve as a Proof-of-Work (PoW) token on the X1 blockchain
               </p>
               <a href="https://docs.xenblocks.io/mining/how-to-mine-xenblocks">
                 <button className="btn btn-primary btn-sm sm:btn-md lg:btn-lg hover:bg-base-100 hover:text-primary font-thin text-lg">
@@ -35,7 +33,7 @@ export default function Home() {
             </div>
           </div>
           <div className="absolute opacity-15 md:opacity-100 md:relative md:block md:col-span-5">
-            <img src="./pick-axe.svg" alt="pickaxe image"></img>
+            <img src="./pick-axe.svg" alt="Pickaxe"></img>
           </div>
         </div>
       </div>
@@ -50,14 +48,13 @@ export default function Home() {
             <article className="">
               <h2 className="mb-6 lg:text-2xl text-accent">HASHING</h2>
               <p className="mb-6 text-sm sm:text-xs lg:text-base md:leading-loose lg:leading-loose uppercase text-justify leading-loose">
-                Miners solve a cryptographic puzzle by finding hashes that
-                contain <code>XEN11.</code> Successful identification of such a
-                hash rewards miners with XENIUM (XNM).
+                Miners solve a cryptographic puzzle by finding hashes that contain{" "}
+                <code>XEN11.</code> Successful identification of such a hash rewards miners with
+                XENIUM (XNM).
               </p>
               <p className="uppercase text-sm sm:text-xs lg:text-base md:leading-loose lg:leading-loose lg:text-md text-justify leading-loose">
-                Central to its design is the cryptographic hashing algorithm
-                Argon2, known for being memory-hard and ensuring fair,
-                asic-resistant mining.
+                Central to its design is the cryptographic hashing algorithm Argon2, known for being
+                memory-hard and ensuring fair, asic-resistant mining.
               </p>
             </article>
           </div>
@@ -68,25 +65,21 @@ export default function Home() {
 
           <div>
             <article className="">
-              <h2 className="mb-6 lg:text-2xl text-accent">
-                FIXED GLOBAL HASHRATE
-              </h2>
+              <h2 className="mb-6 lg:text-2xl text-accent">FIXED GLOBAL HASHRATE</h2>
               <p className="mb-6 text-sm sm:text-xs lg:text-base md:leading-loose lg:leading-loose uppercase text-justify leading-loose">
-                As the network&apos;s overall hash power grows, the mechanism
-                adjusts to reduce individual miners&apos; hash power, decoupling
-                mining intensity from energy consumption by shifting the
-                computational burden to memory.
+                As the network&apos;s overall hash power grows, the mechanism adjusts to reduce
+                individual miners&apos; hash power, decoupling mining intensity from energy
+                consumption by shifting the computational burden to memory.
               </p>
               <p className="text-sm sm:text-xs lg:text-base md:leading-loose lg:leading-loose uppercase text-justify leading-loose">
-                This not only deters ASIC mining but also renders XenBLOCKs
-                mining more accessible, allowing for the use of commonplace
-                GPUs.
+                This not only deters ASIC mining but also renders XenBLOCKs mining more accessible,
+                allowing for the use of commonplace GPUs.
               </p>
             </article>
           </div>
 
           <div>
-            <img src="./hashratefixed.svg" alt="how it works"></img>
+            <img src="./hashratefixed.svg" alt="Fixed global hashrate"></img>
           </div>
         </div>
       </Section>
@@ -100,7 +93,7 @@ export default function Home() {
             Miners receive XNM every time they find a xenblock.
           </p>
           <div className="p-5 lg:p-20">
-            <img src="./xeniumchart.svg"></img>
+            <img src="./xeniumchart.svg" alt="XENIUM (XNM) emission over time"></img>
           </div>
         </article>
       </Section>
@@ -123,6 +116,7 @@ export default function Home() {
               className="absolute -left-2 bottom-0 opacity-20 lg:opacity-95"
               width={300}
               src="./bottom-blocks.svg"
+              alt=""
             ></img>
           </div>
         </div>

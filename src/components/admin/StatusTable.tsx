@@ -1,9 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { fetchDeltas, type TokenDelta } from "@/lib/admin/fetchDeltas";
-import {
-  fetchGlobalState,
-  type GlobalStateV2,
-} from "@/lib/admin/fetchGlobalState";
+import { fetchGlobalState, type GlobalStateV2 } from "@/lib/admin/fetchGlobalState";
 import { adminConfig } from "@/lib/admin/config";
 
 interface StatusTableProps {
@@ -19,29 +16,31 @@ export function StatusTable({
   onDeltasChange,
   onGlobalStateChange,
 }: StatusTableProps) {
-  const [loading, setLoading] = useState(false);
+  // Starts true: the fetch below begins on mount, so anything else would paint
+  // "No data" for one frame before the request has had a chance to run.
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [deltasResult, stateResult] = await Promise.all([
-        fetchDeltas(adminConfig.rpcUrl),
-        fetchGlobalState(adminConfig.rpcUrl),
-      ]);
-      onDeltasChange(deltasResult);
-      onGlobalStateChange(stateResult);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch data");
-    } finally {
-      setLoading(false);
-    }
-  }, [onDeltasChange, onGlobalStateChange]);
-
   useEffect(() => {
-    refresh();
-  }, []);
+    let cancelled = false;
+
+    Promise.all([fetchDeltas(adminConfig.rpcUrl), fetchGlobalState(adminConfig.rpcUrl)])
+      .then(([deltasResult, stateResult]) => {
+        if (cancelled) return;
+        onDeltasChange(deltasResult);
+        onGlobalStateChange(stateResult);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to fetch data");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [onDeltasChange, onGlobalStateChange]);
 
   const fmt = (v: bigint) => {
     const negative = v < 0n;
@@ -49,10 +48,8 @@ export function StatusTable({
     const whole = Number(abs / 1_000_000_000n);
     if (whole === 0) return "-";
     const prefix = negative ? "-" : "";
-    if (whole >= 1_000_000_000)
-      return `${prefix}${(whole / 1_000_000_000).toFixed(1)}B`;
-    if (whole >= 1_000_000)
-      return `${prefix}${(whole / 1_000_000).toFixed(1)}M`;
+    if (whole >= 1_000_000_000) return `${prefix}${(whole / 1_000_000_000).toFixed(1)}B`;
+    if (whole >= 1_000_000) return `${prefix}${(whole / 1_000_000).toFixed(1)}M`;
     if (whole >= 1_000) return `${prefix}${(whole / 1_000).toFixed(1)}K`;
     return `${prefix}${whole}`;
   };
@@ -103,21 +100,13 @@ export function StatusTable({
                   {deltas.map((d) => {
                     const trackerTotal = airdropedByToken[d.name];
                     const pending =
-                      trackerTotal !== undefined
-                        ? d.eligible - trackerTotal
-                        : undefined;
+                      trackerTotal !== undefined ? d.eligible - trackerTotal : undefined;
                     return (
                       <tr key={d.name}>
                         <td className="font-medium">{d.name}</td>
-                        <td className="text-right font-mono">
-                          {fmt(d.apiTotal)}
-                        </td>
-                        <td className="text-right font-mono">
-                          {fmt(d.eligible)}
-                        </td>
-                        <td className="text-right font-mono">
-                          {fmt(d.totalSupply)}
-                        </td>
+                        <td className="text-right font-mono">{fmt(d.apiTotal)}</td>
+                        <td className="text-right font-mono">{fmt(d.eligible)}</td>
+                        <td className="text-right font-mono">{fmt(d.totalSupply)}</td>
                         <td className="text-right font-mono">
                           {trackerTotal !== undefined ? fmt(trackerTotal) : "-"}
                         </td>
@@ -146,34 +135,21 @@ export function StatusTable({
                   })}
                   <tr>
                     <td className="font-medium">Native</td>
-                    <td className="text-right font-mono text-base-content/40">
-                      -
-                    </td>
-                    <td className="text-right font-mono text-base-content/40">
-                      -
-                    </td>
-                    <td className="text-right font-mono text-base-content/40">
-                      -
-                    </td>
+                    <td className="text-right font-mono text-base-content/40">-</td>
+                    <td className="text-right font-mono text-base-content/40">-</td>
+                    <td className="text-right font-mono text-base-content/40">-</td>
                     <td className="text-right font-mono">
                       {airdropedByToken["Native"] !== undefined
                         ? fmt(airdropedByToken["Native"])
                         : "-"}
                     </td>
-                    <td className="text-right font-mono text-base-content/40">
-                      -
-                    </td>
-                    <td className="text-right font-mono text-base-content/40">
-                      -
-                    </td>
+                    <td className="text-right font-mono text-base-content/40">-</td>
+                    <td className="text-right font-mono text-base-content/40">-</td>
                   </tr>
                 </>
               ) : (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="py-8 text-center text-base-content/40"
-                  >
+                  <td colSpan={7} className="py-8 text-center text-base-content/40">
                     {loading ? "Loading..." : "No data"}
                   </td>
                 </tr>

@@ -29,7 +29,7 @@ async function testRpcConnection(connection: Connection): Promise<void> {
     if (err instanceof TypeError && err.message === "Failed to fetch") {
       throw new Error(
         "Cannot reach RPC endpoint. The server may not support browser requests (CORS). Try a CORS-enabled RPC URL in Settings.",
-        { cause: err },
+        { cause: err }
       );
     }
     throw err;
@@ -44,9 +44,7 @@ export async function fetchDeltas(rpcUrl: string): Promise<TokenDelta[]> {
   const apiUrl = `${API_ENDPOINT}${API_ENDPOINT.includes("?") ? "&" : "?"}limit=1`;
   const response = await fetch(apiUrl);
   if (!response.ok) {
-    throw new Error(
-      `Leaderboard API returned ${response.status}: ${response.statusText}`,
-    );
+    throw new Error(`Leaderboard API returned ${response.status}: ${response.statusText}`);
   }
   const data = (await response.json()) as LeaderboardResponse;
 
@@ -57,21 +55,13 @@ export async function fetchDeltas(rpcUrl: string): Promise<TokenDelta[]> {
   };
 
   const eligibleTotals: Record<string, bigint> = {
-    xnm: convertApiAmountToTokenAmount(
-      (data.totalXnmWithSol ?? data.totalXnm).toString(),
-    ),
-    xblk: convertApiAmountToTokenAmount(
-      (data.totalXblkWithSol ?? data.totalXblk).toString(),
-    ),
-    xuni: convertApiAmountToTokenAmount(
-      (data.totalXuniWithSol ?? data.totalXuni).toString(),
-    ),
+    xnm: convertApiAmountToTokenAmount((data.totalXnmWithSol ?? data.totalXnm).toString()),
+    xblk: convertApiAmountToTokenAmount((data.totalXblkWithSol ?? data.totalXblk).toString()),
+    xuni: convertApiAmountToTokenAmount((data.totalXuniWithSol ?? data.totalXuni).toString()),
   };
 
   const mintInfos = await Promise.all(
-    TOKENS.map((t) =>
-      getMint(connection, t.mint, "confirmed", TOKEN_PROGRAM_ID),
-    ),
+    TOKENS.map((t) => getMint(connection, t.mint, "confirmed", TOKEN_PROGRAM_ID))
   );
 
   return TOKENS.map((token, i) => {

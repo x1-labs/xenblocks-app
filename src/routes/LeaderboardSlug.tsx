@@ -45,12 +45,11 @@ export default function LeaderboardSlug() {
 
   // Fetch airdrop record from on-chain
   const { data: airdropData, isLoading: isLoadingAirdrop } = useAirdropRecord(
-    leaderboardEntry.account || null,
+    leaderboardEntry.account || null
   );
 
   // Fetch token metadata for logos
-  const { data: tokenMetadata, isLoading: isLoadingTokenMetadata } =
-    useTokenMetadata();
+  const { data: tokenMetadata, isLoading: isLoadingTokenMetadata } = useTokenMetadata();
 
   // Calculate API amounts (converted to 9 decimals)
   const apiXnm = toTokenAmount(leaderboardEntry.xnm);
@@ -117,7 +116,7 @@ export default function LeaderboardSlug() {
               <div
                 className={`grid grid-cols-1 ${x1Address && "lg:grid-cols-2"} gap-2 sm:gap-4 opacity-0 mb-2 sm:mb-4 ${!isLoading ? "fade-in" : ""}`}
               >
-                <div className={`outline outline-secondary col-span-1`}>
+                <div className={`outline-3 outline-secondary col-span-1`}>
                   <div className="stat p-3">
                     <div className="stat-title text-accent text-xs md:text-sm mb-3">
                       Ethereum Address
@@ -129,7 +128,7 @@ export default function LeaderboardSlug() {
                 </div>
 
                 {x1Address ? (
-                  <div className={`outline outline-secondary col-span-1`}>
+                  <div className={`outline-3 outline-secondary col-span-1`}>
                     <div className="stat p-3">
                       <div className="stat-title text-accent text-xs md:text-sm mb-3">
                         X1 Address
@@ -153,14 +152,8 @@ export default function LeaderboardSlug() {
               <div
                 className={`grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 opacity-0 ${!isLoading ? "fade-in" : ""}`}
               >
-                <Metric
-                  title="Rank"
-                  value={leaderboardEntry.rank?.toLocaleString()}
-                />
-                <Metric
-                  title="Blocks"
-                  value={leaderboardEntry.blocks.toLocaleString()}
-                />
+                <Metric title="Rank" value={leaderboardEntry.rank?.toLocaleString()} />
+                <Metric title="Blocks" value={leaderboardEntry.blocks.toLocaleString()} />
                 <Metric title="XNM" value={xnm.toLocaleString()} />
                 <Metric title="XBLK" value={xblk.toLocaleString()} />
                 <Metric title="XUNI" value={xuni.toLocaleString()} />
@@ -188,7 +181,7 @@ export default function LeaderboardSlug() {
                     <div
                       className={`grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 opacity-0 ${!isLoading ? "fade-in" : ""}`}
                     >
-                      <div className="outline outline-secondary col-span-1">
+                      <div className="outline-3 outline-secondary col-span-1">
                         <div className="stat p-3">
                           <div className="stat-title text-accent text-xs md:text-sm mb-3 flex items-center gap-2">
                             {tokenMetadata?.xnm?.logoUrl && (
@@ -222,7 +215,7 @@ export default function LeaderboardSlug() {
                           )}
                         </div>
                       </div>
-                      <div className="outline outline-secondary col-span-1">
+                      <div className="outline-3 outline-secondary col-span-1">
                         <div className="stat p-3">
                           <div className="stat-title text-accent text-xs md:text-sm mb-3 flex items-center gap-2">
                             {tokenMetadata?.xblk?.logoUrl && (
@@ -256,7 +249,7 @@ export default function LeaderboardSlug() {
                           )}
                         </div>
                       </div>
-                      <div className="outline outline-secondary col-span-1">
+                      <div className="outline-3 outline-secondary col-span-1">
                         <div className="stat p-3">
                           <div className="stat-title text-accent text-xs md:text-sm mb-3 flex items-center gap-2">
                             {tokenMetadata?.xuni?.logoUrl && (
@@ -295,9 +288,7 @@ export default function LeaderboardSlug() {
                 </>
               )}
               {!isLoading && !x1Address && (
-                <div
-                  className={`mt-6 opacity-0 ${!isLoading ? "fade-in" : ""}`}
-                >
+                <div className={`mt-6 opacity-0 ${!isLoading ? "fade-in" : ""}`}>
                   <h2 className="text-lg mb-2">X1 Airdrop Status</h2>
                   <p className="text-base-content/70">
                     No X1 address registered.{" "}

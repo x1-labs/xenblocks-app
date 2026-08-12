@@ -21,9 +21,7 @@ function getConnection(): Connection {
 /**
  * Fetch Token-2022 metadata for a mint
  */
-export async function fetchTokenMetadata(
-  mintAddress: string,
-): Promise<TokenMetadata | null> {
+export async function fetchTokenMetadata(mintAddress: string): Promise<TokenMetadata | null> {
   try {
     const conn = getConnection();
     const mint = new PublicKey(mintAddress);

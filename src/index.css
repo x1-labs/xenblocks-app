@@ -1,61 +1,141 @@
 @import "@solana/wallet-adapter-react-ui/styles.css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/*
+  Tailwind 4 is CSS-first: this file replaces tailwind.config.ts and
+  postcss.config.mjs, both of which are gone. Utility class detection is
+  automatic, so the old `content` globs are not needed either.
+*/
+@import "tailwindcss";
+
+/* Used by the `prose` block on the leaderboard intro copy. */
+@plugin "@tailwindcss/typography";
+
+@plugin "daisyui" {
+  themes: xenblocks --default;
+}
+
+/*
+  The xenblocks theme, ported from the daisyUI 4 `daisyui.themes` block.
+  Two things changed in daisyUI 5 and both matter here:
+    - the `*-focus` tokens (primary-focus, secondary-focus, accent-focus,
+      neutral-focus) were removed; v5 derives hover states from the base colour.
+    - the radius variables were renamed: --rounded-box -> --radius-box,
+      --rounded-btn -> --radius-field, --rounded-badge -> --radius-selector,
+      and --tab-radius was dropped. All are 0 here: square corners are the
+      brand, so these must not be left at their rounded defaults.
+*/
+@plugin "daisyui/theme" {
+  name: "xenblocks";
+  default: true;
+  color-scheme: dark;
+
+  --color-primary: #19ff14;
+  --color-primary-content: #000000;
+  --color-secondary: #334143;
+  --color-secondary-content: #000000;
+  --color-accent: #ffffff;
+  --color-accent-content: #000000;
+  --color-neutral: #3d4451;
+  --color-neutral-content: #b1b1b1;
+  --color-base-100: #161616;
+  --color-base-200: #070c0d;
+  --color-base-300: #444444;
+  --color-base-content: #b1b1b1;
+  --color-info: #2094f3;
+  --color-success: #009485;
+  --color-warning: #ff9900;
+  --color-error: #ff1414;
+
+  --radius-box: 0;
+  --radius-field: 0;
+  --radius-selector: 0;
+
+  /*
+    daisyUI 5 requires these five alongside the radii; a theme that omits them
+    gets no value at all rather than a default, which silently drops the border
+    off every input. --size-* and --border are daisyUI's own defaults.
+    --depth and --noise are v5 additions that shade and texture components;
+    both are off here because the design is deliberately flat.
+  */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
 
 @font-face {
   font-family: "ProtoMono";
   src: url("/fonts/ProtoMono-Regular.ttf");
 }
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+/*
+  daisyUI 4 allowed raw CSS rules inside the theme object. daisyUI 5 has no
+  equivalent, so the ProtoMono assignments and the .btn-lg sizing override that
+  used to live there are plain CSS now.
+*/
+body,
+h1,
+h2,
+h3,
+h4,
+.btn,
+.tab,
+.alert {
+  font-family: "ProtoMono";
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+.alert {
+  border: 2px;
+}
+
+.btn-lg {
+  height: 3rem;
+  min-height: 3rem;
+}
+
+/*
+  daisyUI 4's default .btn was 3rem tall, and the theme above pinned .btn-lg to
+  3rem so that every button matched. daisyUI 5 lowered the default to 2.5rem,
+  which would leave the unsized buttons (the mobile footer, the closing
+  "START MINING" call to action) shorter than the sized ones. The :not() guard
+  keeps the explicit modifiers -- btn-xs on the pagination and nav, btn-sm in
+  the admin panels -- winning as they should.
+*/
+.btn:not(.btn-xs, .btn-sm, .btn-md, .btn-lg, .btn-xl) {
+  height: 3rem;
+  min-height: 3rem;
+}
+
+/*
+  Tailwind 4 compatibility shims. Each restores a v3 default that v4 changed,
+  so the migration does not silently restyle the whole app.
+*/
+@layer base {
+  /* v4 defaults the border colour to currentcolor. */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* v4 changed buttons from cursor: pointer to cursor: default. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* v4 changed the placeholder colour from gray-400 to current colour at 50%. */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
   }
 }
 
 html {
   overflow-y: scroll;
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-
-  #background-image-overlay {
-    opacity: 0.2;
-  }
-  [data-theme="dark"],
-  [data-theme="synthwave"],
-  [data-theme="forest"],
-  [data-theme="aqua"],
-  [data-theme="black"],
-  [data-theme="luxury"],
-  [data-theme="dracula"],
-  [data-theme="business"],
-  [data-theme="night"],
-  [data-theme="coffee"],
-  [data-theme="dim"],
-  [data-theme="sunset"],
-  [data-theme="halloween"] {
-    #background-image-overlay {
-      opacity: 0.12;
-    }
-  }
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
 }
 
 @keyframes fadeInAnimation {
@@ -124,29 +204,31 @@ body {
 .wallet-adapter-button {
   font-family: "ProtoMono", monospace !important;
   background-color: transparent !important;
-  border: 1px solid #19FF14 !important;
-  color: #19FF14 !important;
+  border: 1px solid #19ff14 !important;
+  color: #19ff14 !important;
   border-radius: 0.5rem !important;
   height: 2.5rem !important;
   padding: 0 1rem !important;
   font-size: 0.8rem !important;
-  transition: background-color 0.2s, color 0.2s !important;
+  transition:
+    background-color 0.2s,
+    color 0.2s !important;
 }
 
 .wallet-adapter-button:hover {
-  background-color: #19FF14 !important;
+  background-color: #19ff14 !important;
   color: #000000 !important;
 }
 
 .wallet-adapter-button-trigger {
-  background-color: #19FF14 !important;
+  background-color: #19ff14 !important;
   color: #000000 !important;
 }
 
 .wallet-adapter-button-trigger:hover {
   background-color: transparent !important;
-  color: #19FF14 !important;
-  border: 1px solid #19FF14 !important;
+  color: #19ff14 !important;
+  border: 1px solid #19ff14 !important;
 }
 
 .wallet-adapter-modal-wrapper {
@@ -157,18 +239,18 @@ body {
 }
 
 .wallet-adapter-modal-title {
-  color: #B1B1B1 !important;
+  color: #b1b1b1 !important;
 }
 
 .wallet-adapter-modal-list .wallet-adapter-button {
   border: none !important;
   background-color: transparent !important;
-  color: #B1B1B1 !important;
+  color: #b1b1b1 !important;
 }
 
 .wallet-adapter-modal-list .wallet-adapter-button:hover {
-  background-color: #070C0D !important;
-  color: #19FF14 !important;
+  background-color: #070c0d !important;
+  color: #19ff14 !important;
 }
 
 .wallet-adapter-modal-button-close {

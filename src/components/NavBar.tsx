@@ -21,14 +21,14 @@ export const NavBar = () => {
       </Link>
 
       <Link className="ml-auto" to="/leaderboard">
-        <button className="btn btn-ghost btn-neutral hover:bg-base-100 hover:text-accent btn-mono btn-xs sm:btn-lg">
+        <button className="btn btn-ghost hover:bg-base-100 hover:text-accent btn-xs sm:btn-lg">
           <IoTrophy></IoTrophy>
           LEADERBOARD
         </button>
       </Link>
 
       <a href="https://t.me/+yDcqqTGMNC4yNjdj">
-        <button className="btn btn-ghost btn-neutral hover:bg-base-100 hover:text-accent btn-mono btn-xs btn-mono sm:btn-lg">
+        <button className="btn btn-ghost hover:bg-base-100 hover:text-accent btn-xs sm:btn-lg">
           <BsSendFill></BsSendFill>
           COMMUNITY
         </button>

@@ -4,7 +4,7 @@ A [Vite](https://vite.dev/) + [React](https://react.dev/) + [React Router](https
 
 ## Getting Started
 
-> Requires [Node.js](https://nodejs.org/) 18+ and [Bun](https://bun.sh/) (or npm/yarn).
+> Requires [Node.js](https://nodejs.org/) 24+ and [Bun](https://bun.sh/) 1.3+.
 
 ```bash
 bun install
@@ -26,19 +26,26 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `bun run dev` | Start dev server on port 3001 |
-| `bun run build` | Type-check and build for production (`dist/`) |
-| `bun run preview` | Preview production build on port 3001 |
-| `bun run lint` | Run ESLint |
+| Command              | Description                                   |
+| -------------------- | --------------------------------------------- |
+| `bun run dev`        | Start dev server on port 3001                 |
+| `bun run build`      | Type-check and build for production (`dist/`) |
+| `bun run preview`    | Preview production build on port 3001         |
+| `bun run checks`     | Type-check, lint and format check             |
+| `bun run typecheck`  | Run `tsc -b`                                  |
+| `bun run lint`       | Run ESLint                                    |
+| `bun run format:fix` | Format with Prettier                          |
+
+`bun run checks` is what CI runs on every pull request.
 
 ## Tech Stack
 
-- **Build**: [Vite](https://vite.dev/) 7 + [TypeScript](https://www.typescriptlang.org/) 5
-- **UI**: [React](https://react.dev/) 19 + [React Router](https://reactrouter.com/) 7
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) 3.4 + [DaisyUI](https://daisyui.com/) 4.12
-- **Blockchain**: [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/) + [@solana/spl-token](https://www.npmjs.com/package/@solana/spl-token)
+- **Build**: [Vite](https://vite.dev/) 8 + [TypeScript](https://www.typescriptlang.org/) 6
+- **UI**: [React](https://react.dev/) 19 + [React Router](https://reactrouter.com/) 8
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) 4 + [DaisyUI](https://daisyui.com/) 5 — configured
+  in CSS (`src/index.css`); there is no `tailwind.config.ts`
+- **Blockchain**: [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/), [@solana/spl-token](https://www.npmjs.com/package/@solana/spl-token),
+  [Anchor](https://www.anchor-lang.com/) and [Squads](https://squads.so/) for the `/airdrops` console
 
 ## Learn More
 

@@ -3,10 +3,7 @@ import { Connection } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { createMintProposal } from "@/lib/admin/createMintProposal";
 import { createBurnProposal } from "@/lib/admin/createBurnProposal";
-import {
-  fetchBotBalances,
-  type BotBalance,
-} from "@/lib/admin/fetchBotBalances";
+import { fetchBotBalances } from "@/lib/admin/fetchBotBalances";
 import { adminConfig } from "@/lib/admin/config";
 import type { TokenDelta } from "@/lib/admin/fetchDeltas";
 import type { GlobalStateV2 } from "@/lib/admin/fetchGlobalState";
@@ -23,65 +20,62 @@ export function ProposalPanel({ deltas, globalState }: ProposalPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [amounts, setAmounts] = useState<Record<string, string>>({});
 
-  const computeShortfall = useCallback(async () => {
-    if (!deltas || !globalState || !adminConfig.botAddress) return;
-
-    let balances: BotBalance[];
-    try {
-      balances = await fetchBotBalances(
-        adminConfig.rpcUrl,
-        adminConfig.botAddress,
-      );
-    } catch {
-      return;
-    }
-
-    const airdropped: Record<string, bigint> = {
-      XNM: globalState.xnmAirdropped,
-      XBLK: globalState.xblkAirdropped,
-      XUNI: globalState.xuniAirdropped,
-    };
-
-    const newAmounts: Record<string, string> = {};
-    for (const d of deltas) {
-      const air = airdropped[d.name];
-      if (air === undefined) continue;
-      const pendingAirdrop = d.eligible - air;
-      const botBal = balances.find((b) => b.name === d.name);
-      if (!botBal) continue;
-      const shortfall = botBal.balance - pendingAirdrop;
-      const mintAmount = shortfall < 0n ? -shortfall : 0n;
-      newAmounts[d.name] = (mintAmount / 1_000_000_000n).toString();
-    }
-    setAmounts(newAmounts);
-  }, [deltas, globalState]);
-
+  // Pre-fills each amount with the mint needed to cover the bot's shortfall.
+  // On failure the inputs are left as they are rather than zeroed, so a
+  // transient RPC error cannot silently turn a pending proposal into a no-op.
   useEffect(() => {
-    computeShortfall();
-  }, [computeShortfall]);
+    const botAddress = adminConfig.botAddress;
+    if (!deltas || !globalState || !botAddress) return;
+
+    let cancelled = false;
+
+    fetchBotBalances(adminConfig.rpcUrl, botAddress)
+      .then((balances) => {
+        if (cancelled) return;
+
+        const airdropped: Record<string, bigint> = {
+          XNM: globalState.xnmAirdropped,
+          XBLK: globalState.xblkAirdropped,
+          XUNI: globalState.xuniAirdropped,
+        };
+
+        const newAmounts: Record<string, string> = {};
+        for (const d of deltas) {
+          const air = airdropped[d.name];
+          if (air === undefined) continue;
+          const pendingAirdrop = d.eligible - air;
+          const botBal = balances.find((b) => b.name === d.name);
+          if (!botBal) continue;
+          const shortfall = botBal.balance - pendingAirdrop;
+          const mintAmount = shortfall < 0n ? -shortfall : 0n;
+          newAmounts[d.name] = (mintAmount / 1_000_000_000n).toString();
+        }
+        setAmounts(newAmounts);
+      })
+      .catch(() => {
+        // Leave the existing amounts in place.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deltas, globalState]);
 
   const syncSupply = useCallback(() => {
     if (!deltas) return;
     const newAmounts: Record<string, string> = {};
     for (const d of deltas) {
       const diff = d.apiTotal - d.totalSupply;
-      newAmounts[d.name] = (
-        (diff > 0n ? diff : 0n) / 1_000_000_000n
-      ).toString();
+      newAmounts[d.name] = ((diff > 0n ? diff : 0n) / 1_000_000_000n).toString();
     }
     setAmounts(newAmounts);
   }, [deltas]);
 
-  const walletReady =
-    wallet.connected && wallet.publicKey && wallet.signTransaction;
+  const walletReady = wallet.connected && wallet.publicKey && wallet.signTransaction;
 
-  const tokenNames =
-    deltas?.map((d) => d.name).filter((name) => name in amounts) ?? [];
-  const hasAnyMintAmount = tokenNames.some(
-    (name) => parseInt(amounts[name] || "0", 10) > 0,
-  );
-  const negativeDeltas =
-    deltas?.filter((d) => d.totalSupply > d.eligible) ?? [];
+  const tokenNames = deltas?.map((d) => d.name).filter((name) => name in amounts) ?? [];
+  const hasAnyMintAmount = tokenNames.some((name) => parseInt(amounts[name] || "0", 10) > 0);
+  const negativeDeltas = deltas?.filter((d) => d.totalSupply > d.eligible) ?? [];
 
   const handleMint = async () => {
     if (!wallet.publicKey || !wallet.signTransaction || !deltas) return;
@@ -128,13 +122,11 @@ export function ProposalPanel({ deltas, globalState }: ProposalPanelProps) {
         adminConfig.vaultIndex,
         adminConfig.botAddress,
         modifiedDeltas,
-        adminConfig.squadsProgramId || undefined,
+        adminConfig.squadsProgramId || undefined
       );
       setResult(signature);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to create proposal",
-      );
+      setError(err instanceof Error ? err.message : "Failed to create proposal");
     } finally {
       setLoading(null);
     }
@@ -161,13 +153,11 @@ export function ProposalPanel({ deltas, globalState }: ProposalPanelProps) {
         adminConfig.multisigAddress,
         adminConfig.vaultIndex,
         deltas!,
-        adminConfig.squadsProgramId || undefined,
+        adminConfig.squadsProgramId || undefined
       );
       setResult(signature);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to create proposal",
-      );
+      setError(err instanceof Error ? err.message : "Failed to create proposal");
     } finally {
       setLoading(null);
     }
@@ -179,9 +169,7 @@ export function ProposalPanel({ deltas, globalState }: ProposalPanelProps) {
         <h2 className="card-title text-lg">Proposals</h2>
 
         {!walletReady && (
-          <p className="text-sm text-base-content/60">
-            Connect a wallet to create proposals
-          </p>
+          <p className="text-sm text-base-content/60">Connect a wallet to create proposals</p>
         )}
 
         {tokenNames.length > 0 && (
@@ -208,10 +196,8 @@ export function ProposalPanel({ deltas, globalState }: ProposalPanelProps) {
                             [name]: e.target.value,
                           }))
                         }
-                        className={`input input-sm input-bordered w-28 font-mono text-right ${
-                          val > 0
-                            ? "border-success/40 text-success"
-                            : "text-base-content/40"
+                        className={`input input-sm w-28 font-mono text-right ${
+                          val > 0 ? "border-success/40 text-success" : "text-base-content/40"
                         }`}
                       />
                     </td>
@@ -243,9 +229,7 @@ export function ProposalPanel({ deltas, globalState }: ProposalPanelProps) {
           </button>
           <button
             onClick={handleBurn}
-            disabled={
-              !walletReady || negativeDeltas.length === 0 || loading !== null
-            }
+            disabled={!walletReady || negativeDeltas.length === 0 || loading !== null}
             className="btn btn-error btn-sm"
           >
             {loading === "burn" ? (

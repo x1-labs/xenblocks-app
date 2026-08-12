@@ -11,8 +11,7 @@ export const TOKEN_MINTS = {
 
 export const TOKEN_PROGRAM_ID = TOKEN_2022_PROGRAM_ID;
 
-export const API_ENDPOINT =
-  "https://xenblocks.io/v1/leaderboard?require_sol_address=true";
+export const API_ENDPOINT = "https://xenblocks.io/v1/leaderboard?require_sol_address=true";
 
 export const DEFAULT_RPC_URL = "https://rpc.mainnet.x1.xyz";
 

@@ -1,5 +1,4 @@
 import { NavBar } from "@/components/NavBar";
-import "react-medium-image-zoom/dist/styles.css";
 import Footer from "@/components/Footer";
 import React, { useEffect } from "react";
 import { Section } from "@/components/Section";
@@ -7,20 +6,15 @@ import { Metric } from "@/components/Metric";
 import { useNavigate } from "react-router";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { RxDoubleArrowLeft, RxDoubleArrowRight } from "react-icons/rx";
-import {
-  getLeaderboard,
-  Leaderboard as LeaderboardType,
-  LeaderboardEntry,
-} from "@/api";
+import { getLeaderboard, Leaderboard as LeaderboardType, LeaderboardEntry } from "@/api";
 import { Loader } from "@/components/Loader";
 import { useLeaderboardPage } from "@/hooks/LeaderBoardPageHook";
 import { useLeaderboardLimit } from "@/hooks/LeaderBoardLimitHook";
 import { SearchBar } from "@/components/Searchbar";
 
-function row(
-  leaderboardEntry: LeaderboardEntry,
-  handleClick: (account: string) => void,
-) {
+const ROWS_PER_PAGE_OPTIONS = [25, 100, 500, 1000];
+
+function row(leaderboardEntry: LeaderboardEntry, handleClick: (account: string) => void) {
   const xnm = leaderboardEntry.xnm
     ? Math.round(leaderboardEntry.xnm * Math.pow(10, -18)).toLocaleString()
     : "0";
@@ -72,12 +66,17 @@ function headerRow() {
 
 export default function Leaderboard() {
   const navigate = useNavigate();
-  const [leaderboard, setLeaderboard] = React.useState<LeaderboardType>(
-    {} as LeaderboardType,
-  );
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [leaderboard, setLeaderboard] = React.useState<LeaderboardType>({} as LeaderboardType);
+  const [loadedKey, setLoadedKey] = React.useState<string | null>(null);
   const [page, setPage] = useLeaderboardPage();
   const [limit, setLimit] = useLeaderboardLimit();
+
+  // Loading is derived from whether the data on hand belongs to the page and
+  // limit currently being shown, rather than tracked in its own state. The 60s
+  // background poll therefore refreshes silently: it re-fetches the same key,
+  // so the spinner never reappears once the first load has landed.
+  const pageKey = `${page}:${limit}`;
+  const isLoading = loadedKey !== pageKey;
 
   const highPage = () => {
     if (!leaderboard.miners || limit < 1) {
@@ -87,9 +86,7 @@ export default function Leaderboard() {
     // If the current page returned a full set of results, there are more pages
     const hasMore = leaderboard.miners.length >= limit;
     const totalBasedMax =
-      leaderboard.totalMiners > 0
-        ? Math.ceil(leaderboard.totalMiners / limit)
-        : page;
+      leaderboard.totalMiners > 0 ? Math.ceil(leaderboard.totalMiners / limit) : page;
 
     if (hasMore) {
       return Math.max(totalBasedMax, page + 1);
@@ -101,8 +98,7 @@ export default function Leaderboard() {
 
   const paginationPages = () => {
     const highPageValue = highPage();
-    const getPage = (page: number) =>
-      page < 1 || page > highPageValue ? -1 : page;
+    const getPage = (page: number) => (page < 1 || page > highPageValue ? -1 : page);
 
     const pages = {
       prevPrev: getPage(page - 2),
@@ -131,18 +127,30 @@ export default function Leaderboard() {
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    let cancelled = false;
+
     const fetchLeaderboard = () => {
-      getLeaderboard(page, limit).then((data) => {
-        setLeaderboard(data);
-        setIsLoading(false);
-      });
+      getLeaderboard(page, limit)
+        .then((data) => {
+          // Guarded so a slow response for a page the user has already left
+          // cannot overwrite the current one.
+          if (cancelled) return;
+          setLeaderboard(data);
+          setLoadedKey(pageKey);
+        })
+        .catch(() => {
+          // Leaves loadedKey unmatched, so the spinner stays up -- the same
+          // outcome a failed request produced before.
+        });
     };
 
     fetchLeaderboard();
     const intervalId = setInterval(fetchLeaderboard, 60000);
-    return () => clearInterval(intervalId);
-  }, [page, limit]);
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [page, limit, pageKey]);
 
   return (
     <main className="flex flex-col mx-0">
@@ -155,8 +163,7 @@ export default function Leaderboard() {
               <h1 className="text-2xl text-accent">Leaderboard</h1>
             </div>
             <article className="prose">
-              XENBLOCKs is a Proof of Work element of{" "}
-              <a href="https://x1.xyz/"> X1 Blockchain™</a>
+              XENBLOCKs is a Proof of Work element of <a href="https://x1.xyz/"> X1 Blockchain™</a>
             </article>
           </div>
         </div>
@@ -184,23 +191,17 @@ export default function Leaderboard() {
           />
           <Metric
             title="Total XNM"
-            value={Math.round(
-              (leaderboard.totalXnm || 0) / 1e18,
-            ).toLocaleString()}
+            value={Math.round((leaderboard.totalXnm || 0) / 1e18).toLocaleString()}
             desc="Total Supply"
           />
           <Metric
             title="Total XBLK"
-            value={Math.round(
-              (leaderboard.totalXblk || 0) / 1e18,
-            ).toLocaleString()}
+            value={Math.round((leaderboard.totalXblk || 0) / 1e18).toLocaleString()}
             desc="Total Supply"
           />
           <Metric
             title="Total XUNI"
-            value={Math.round(
-              (leaderboard.totalXuni || 0) / 1e18,
-            ).toLocaleString()}
+            value={Math.round((leaderboard.totalXuni || 0) / 1e18).toLocaleString()}
             desc="Total Supply"
           />
         </div>
@@ -222,7 +223,7 @@ export default function Leaderboard() {
               {leaderboard.miners?.map((entry: LeaderboardEntry) =>
                 row(entry, (account: string) => {
                   navigate(`/leaderboard/${account}`);
-                }),
+                })
               )}
             </tbody>
           </table>
@@ -230,51 +231,28 @@ export default function Leaderboard() {
         <div className="flex items-center justify-between w-full mt-3">
           <div className="mr-auto">
             <div className="flex items-center">
-              <span className="text-sm mr-1 hidden sm:inline-block">
-                ROWS PER PAGE
-              </span>
+              <span className="text-sm mr-1 hidden sm:inline-block">ROWS PER PAGE</span>
               <details className="dropdown">
                 <summary className="btn btn-xs rounded btn-ghost m-1 btn-outline btn-secondary text-accent">
                   <span className="text-base-content">{limit}</span>
                   <MdKeyboardArrowDown className="text-base-content" />
                 </summary>
                 <ul className="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2">
-                  <li>
-                    <a
-                      onClick={() => {
-                        setLimit(25);
-                      }}
-                    >
-                      25
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      onClick={() => {
-                        setLimit(100);
-                      }}
-                    >
-                      100
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      onClick={() => {
-                        setLimit(500);
-                      }}
-                    >
-                      500
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      onClick={() => {
-                        setLimit(1000);
-                      }}
-                    >
-                      1000
-                    </a>
-                  </li>
+                  {ROWS_PER_PAGE_OPTIONS.map((option) => (
+                    <li key={option}>
+                      {/* A button, not an anchor: these change the page size
+                          rather than navigate, and an anchor without an href is
+                          not reachable by keyboard. */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLimit(option);
+                        }}
+                      >
+                        {option}
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               </details>
             </div>

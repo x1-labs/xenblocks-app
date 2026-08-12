@@ -11,52 +11,73 @@ export interface AirdropData {
   lastUpdated: bigint;
 }
 
+interface AirdropResult {
+  /** The address this result was fetched for, so a stale one is never shown. */
+  address: string;
+  data: AirdropData | null;
+  error: Error | null;
+}
+
+const EMPTY_RECORD: AirdropData = {
+  record: null,
+  xnmAirdropped: 0n,
+  xblkAirdropped: 0n,
+  xuniAirdropped: 0n,
+  nativeAirdropped: 0n,
+  lastUpdated: 0n,
+};
+
 export function useAirdropRecord(ethAddress: string | null) {
-  const [data, setData] = useState<AirdropData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [result, setResult] = useState<AirdropResult | null>(null);
 
   useEffect(() => {
-    if (!ethAddress) {
-      setData(null);
-      return;
-    }
+    if (!ethAddress) return;
 
-    setIsLoading(true);
-    setError(null);
+    let cancelled = false;
 
     fetchAirdropRecord(ethAddress)
       .then((record) => {
-        if (record) {
-          setData({
-            record,
-            xnmAirdropped: record.xnmAirdropped,
-            xblkAirdropped: record.xblkAirdropped,
-            xuniAirdropped: record.xuniAirdropped,
-            nativeAirdropped: record.nativeAirdropped,
-            lastUpdated: record.lastUpdated,
-          });
-        } else {
-          setData({
-            record: null,
-            xnmAirdropped: 0n,
-            xblkAirdropped: 0n,
-            xuniAirdropped: 0n,
-            nativeAirdropped: 0n,
-            lastUpdated: 0n,
-          });
-        }
+        if (cancelled) return;
+        setResult({
+          address: ethAddress,
+          error: null,
+          data: record
+            ? {
+                record,
+                xnmAirdropped: record.xnmAirdropped,
+                xblkAirdropped: record.xblkAirdropped,
+                xuniAirdropped: record.xuniAirdropped,
+                nativeAirdropped: record.nativeAirdropped,
+                lastUpdated: record.lastUpdated,
+              }
+            : EMPTY_RECORD,
+        });
       })
-      .catch((err) => {
-        setError(err);
-        setData(null);
-      })
-      .finally(() => {
-        setIsLoading(false);
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setResult({
+          address: ethAddress,
+          data: null,
+          error: err instanceof Error ? err : new Error(String(err)),
+        });
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [ethAddress]);
 
-  return { data, isLoading, error };
+  // Derived rather than tracked in its own state: a request is outstanding
+  // whenever there is an address and the stored result is not for that same
+  // address. This also discards the previous address's data during a switch,
+  // which a separate isLoading flag would briefly show alongside the spinner.
+  const settled = result !== null && result.address === ethAddress;
+
+  return {
+    data: settled ? result.data : null,
+    isLoading: Boolean(ethAddress) && !settled,
+    error: settled ? result.error : null,
+  };
 }
 
 /**

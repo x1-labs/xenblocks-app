@@ -15,10 +15,7 @@ function AdminContent() {
   const [deltas, setDeltas] = useState<TokenDelta[] | null>(null);
   const [globalState, setGlobalState] = useState<GlobalStateV2 | null>(null);
   const handleDeltasChange = useCallback((d: TokenDelta[]) => setDeltas(d), []);
-  const handleGlobalStateChange = useCallback(
-    (s: GlobalStateV2) => setGlobalState(s),
-    [],
-  );
+  const handleGlobalStateChange = useCallback((s: GlobalStateV2) => setGlobalState(s), []);
   const { isMember } = useMultisigMember();
 
   return (
@@ -43,12 +40,7 @@ function AdminContent() {
               <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2">
                 <div className="space-y-4 sm:space-y-6">
                   <BotBalancesPanel deltas={deltas} globalState={globalState} />
-                  {isMember && (
-                    <ProposalPanel
-                      deltas={deltas}
-                      globalState={globalState}
-                    />
-                  )}
+                  {isMember && <ProposalPanel deltas={deltas} globalState={globalState} />}
                 </div>
                 <RunsTable />
               </div>

@@ -27,7 +27,7 @@ export async function createMintProposal(
   vaultIndex: number,
   recipientAddress: string,
   deltas: TokenDelta[],
-  programId?: string,
+  programId?: string
 ): Promise<string> {
   const multisigPda = new PublicKey(multisigAddress);
   const recipient = new PublicKey(recipientAddress);
@@ -48,12 +48,7 @@ export async function createMintProposal(
 
   for (const { name, mint, eligible, totalSupply } of toMint) {
     const delta = eligible - totalSupply;
-    const ata = getAssociatedTokenAddressSync(
-      mint,
-      recipient,
-      true,
-      TOKEN_PROGRAM_ID,
-    );
+    const ata = getAssociatedTokenAddressSync(mint, recipient, true, TOKEN_PROGRAM_ID);
 
     try {
       await getAccount(connection, ata, "confirmed", TOKEN_PROGRAM_ID);
@@ -65,38 +60,29 @@ export async function createMintProposal(
           ata,
           recipient,
           mint,
-          TOKEN_PROGRAM_ID,
-        ),
+          TOKEN_PROGRAM_ID
+        )
       );
     }
 
     mintInstructions.push(
-      createMintToCheckedInstruction(
-        mint,
-        ata,
-        vaultPda,
-        delta,
-        DECIMALS,
-        [],
-        TOKEN_PROGRAM_ID,
-      ),
+      createMintToCheckedInstruction(mint, ata, vaultPda, delta, DECIMALS, [], TOKEN_PROGRAM_ID)
     );
   }
 
   const multisigAccount = await multisig.accounts.Multisig.fromAccountAddress(
     connection,
-    multisigPda,
+    multisigPda
   );
 
   const currentIndex = BigInt(
     typeof multisigAccount.transactionIndex === "number"
       ? multisigAccount.transactionIndex
-      : multisigAccount.transactionIndex.toNumber(),
+      : multisigAccount.transactionIndex.toNumber()
   );
   const transactionIndex = currentIndex + 1n;
 
-  const { blockhash, lastValidBlockHeight } =
-    await connection.getLatestBlockhash();
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
   const innerMessage = new TransactionMessage({
     payerKey: vaultPda,
@@ -140,10 +126,7 @@ export async function createMintProposal(
   const signature = await connection.sendTransaction(signed, {
     skipPreflight: false,
   });
-  await connection.confirmTransaction(
-    { signature, blockhash, lastValidBlockHeight },
-    "confirmed",
-  );
+  await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
 
   return signature;
 }

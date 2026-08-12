@@ -11,28 +11,28 @@ export default function Footer({ isLoading = false }: { isLoading?: boolean }) {
       <nav>
         <div className="">
           <a className="sm:mx-3" href="https://xenblocks.io/leaderboard">
-            <button className="btn btn-ghost btn-accent btn-mono btm-nav-sm sm:btn-lg">
+            <button className="btn btn-ghost sm:btn-lg">
               <IoTrophy />
               LEADERBOARD
             </button>
           </a>
 
           <a className="sm:mx-3" href="https://github.com/jacklevin74/xenminer">
-            <button className="btn btn-ghost btn-accent btn-mono btm-nav-sm sm:btn-lg">
+            <button className="btn btn-ghost sm:btn-lg">
               <SiGithub />
               GITHUB
             </button>
           </a>
 
           <a className="sm:mx-3" href="https://docs.xenblocks.io">
-            <button className="btn btn-ghost btn-accent btn-mono btm-nav-sm sm:btn-lg">
+            <button className="btn btn-ghost sm:btn-lg">
               <SiGitbook />
               GITBOOK
             </button>
           </a>
 
           <a className="sm:mx-3" href="https://t.me/+yDcqqTGMNC4yNjdj">
-            <button className="btn btn-ghost btn-accent btn-mono btm-nav-sm btn-mono sm:btn-lg">
+            <button className="btn btn-ghost sm:btn-lg">
               <BsSendFill />
               COMMUNITY
             </button>
