@@ -13,7 +13,7 @@ bun run dev           # Dev server on port 3001
 bun run build         # tsc -b, then vite build, into dist/
 bun run preview       # Serve the production build on 3001
 bun run checks        # typecheck + lint + format check -- the gate CI runs
-bun run typecheck     # tsc -b
+bun run typecheck     # TypeScript 7, via an explicit path (see Landmines)
 bun run lint          # eslint .
 bun run format:fix    # prettier --write .
 ```
@@ -105,6 +105,23 @@ src/
 - **`tsconfig.node.json` must emit.** It is a referenced project, and TypeScript
   rejects `noEmit` on one (TS6310). Its output goes to `node_modules/.tmp`; that
   is deliberate, not a stray path.
+- **Two TypeScripts are installed on purpose.** `@typescript/native` is an alias
+  for TypeScript 7 (the Go port) and provides the compiler; `typescript` is a
+  real TypeScript 6 and provides the module API that typescript-eslint and the
+  editor import, because typescript-eslint throws outright on TS 7 until 7.1.
+  Both ship a `tsc` binary, so `node_modules/.bin/tsc` is whichever linked last
+  and must not be relied on -- `typecheck` calls
+  `./node_modules/@typescript/native/bin/tsc` by path. Run that, not bare `tsc`,
+  when checking types by hand.
+- **Do not alias `typescript` to `@typescript/typescript6`.** That is the
+  arrangement Microsoft documents and delegation-program uses, but bun resolves
+  the shim's own `npm:typescript@^6` dependency back to the alias -- its version
+  is 6.0.2, which satisfies `^6` -- so `require("typescript")` returns `{}`.
+  delegation-program only escapes this because its web workspace pins a real
+  TypeScript 6 for Next.js.
+- **TypeScript 7 ships prebuilt per-platform binaries** as optional
+  dependencies, so the lockfile carries ~20 `@typescript/typescript-*` entries.
+  Only the host's is installed.
 - **Amounts are `bigint` at 9 decimals on-chain but the leaderboard API returns
   18 decimals.** `toTokenAmount` in `src/hooks/useAirdropRecord.ts` converts.
   Mixing the two silently produces numbers off by 10^9.
