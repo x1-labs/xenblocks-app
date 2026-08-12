@@ -5,10 +5,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
-import {
-  getAssociatedTokenAddressSync,
-  createBurnCheckedInstruction,
-} from "@solana/spl-token";
+import { getAssociatedTokenAddressSync, createBurnCheckedInstruction } from "@solana/spl-token";
 import * as multisig from "@sqds/multisig";
 import { TOKEN_PROGRAM_ID, DECIMALS } from "./constants";
 import type { TokenDelta } from "./fetchDeltas";
@@ -24,7 +21,7 @@ export async function createBurnProposal(
   multisigAddress: string,
   vaultIndex: number,
   deltas: TokenDelta[],
-  programId?: string,
+  programId?: string
 ): Promise<string> {
   const multisigPda = new PublicKey(multisigAddress);
   const squadsProgram = programId ? new PublicKey(programId) : undefined;
@@ -43,42 +40,28 @@ export async function createBurnProposal(
   const burnInstructions: TransactionInstruction[] = [];
 
   for (const { mint, totalSupply, eligible } of overMinted) {
-    const vaultAta = getAssociatedTokenAddressSync(
-      mint,
-      vaultPda,
-      true,
-      TOKEN_PROGRAM_ID,
-    );
+    const vaultAta = getAssociatedTokenAddressSync(mint, vaultPda, true, TOKEN_PROGRAM_ID);
 
     const amount = totalSupply - eligible;
 
     burnInstructions.push(
-      createBurnCheckedInstruction(
-        vaultAta,
-        mint,
-        vaultPda,
-        amount,
-        DECIMALS,
-        [],
-        TOKEN_PROGRAM_ID,
-      ),
+      createBurnCheckedInstruction(vaultAta, mint, vaultPda, amount, DECIMALS, [], TOKEN_PROGRAM_ID)
     );
   }
 
   const multisigAccount = await multisig.accounts.Multisig.fromAccountAddress(
     connection,
-    multisigPda,
+    multisigPda
   );
 
   const currentIndex = BigInt(
     typeof multisigAccount.transactionIndex === "number"
       ? multisigAccount.transactionIndex
-      : multisigAccount.transactionIndex.toNumber(),
+      : multisigAccount.transactionIndex.toNumber()
   );
   const transactionIndex = currentIndex + 1n;
 
-  const { blockhash, lastValidBlockHeight } =
-    await connection.getLatestBlockhash();
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
   const innerMessage = new TransactionMessage({
     payerKey: vaultPda,
@@ -122,10 +105,7 @@ export async function createBurnProposal(
   const signature = await connection.sendTransaction(signed, {
     skipPreflight: false,
   });
-  await connection.confirmTransaction(
-    { signature, blockhash, lastValidBlockHeight },
-    "confirmed",
-  );
+  await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
 
   return signature;
 }

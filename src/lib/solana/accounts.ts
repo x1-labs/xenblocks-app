@@ -16,9 +16,7 @@ function getConnection(): Connection {
 /**
  * Fetch a single airdrop record by ETH address
  */
-export async function fetchAirdropRecord(
-  ethAddress: string,
-): Promise<AirdropRecordV2 | null> {
+export async function fetchAirdropRecord(ethAddress: string): Promise<AirdropRecordV2 | null> {
   const conn = getConnection();
   const programId = new PublicKey(config.programId);
 

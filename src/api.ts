@@ -26,23 +26,19 @@ export interface AddressConnect {
   x1Address: string;
 }
 
-export async function getLeaderboard(
-  page: number,
-  limit: number,
-): Promise<Leaderboard> {
+export async function getLeaderboard(page: number, limit: number): Promise<Leaderboard> {
   const prevPage = page - 1;
   if (prevPage < 0) {
     throw new Error("Invalid page number");
   }
   const offset = prevPage * limit;
   const res = await fetch(
-    import.meta.env.VITE_API_ENDPOINT +
-      `/leaderboard?limit=${limit}&offset=${offset}`,
+    import.meta.env.VITE_API_ENDPOINT + `/leaderboard?limit=${limit}&offset=${offset}`,
     {
       headers: {
         Accept: "application/json",
       },
-    },
+    }
   );
 
   if (!res.ok) {
@@ -52,17 +48,12 @@ export async function getLeaderboard(
   return res.json();
 }
 
-export async function fetchLeaderboardEntry(
-  account: string,
-): Promise<LeaderboardEntry> {
-  const res = await fetch(
-    import.meta.env.VITE_API_ENDPOINT + `/leaderboard/${account}`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
+export async function fetchLeaderboardEntry(account: string): Promise<LeaderboardEntry> {
+  const res = await fetch(import.meta.env.VITE_API_ENDPOINT + `/leaderboard/${account}`, {
+    headers: {
+      Accept: "application/json",
     },
-  );
+  });
 
   if (!res.ok) {
     if (res.status === 404) {
@@ -77,13 +68,12 @@ export async function fetchLeaderboardEntry(
 
 export async function fetchX1Address(account: string): Promise<AddressConnect> {
   const res = await fetch(
-    import.meta.env.VITE_JACKS_ADDRESS_CONNECT_ENDPOINT +
-      `/reg-ledger-api/${account}`,
+    import.meta.env.VITE_JACKS_ADDRESS_CONNECT_ENDPOINT + `/reg-ledger-api/${account}`,
     {
       headers: {
         Accept: "application/json",
       },
-    },
+    }
   );
 
   if (!res.ok) {

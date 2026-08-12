@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import {
   ConnectionProvider,
   WalletProvider as SolanaWalletProvider,
@@ -8,15 +8,10 @@ import { adminConfig } from "@/lib/admin/config";
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const endpoint = adminConfig.rpcUrl;
+  // Empty: wallets are discovered through the Wallet Standard, which every
+  // current Solana wallet extension implements. Adding adapters here would
+  // register a second, duplicate entry for each one.
   const wallets = useMemo(() => [], []);
-
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setReady(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!ready) return null;
 
   return (
     <ConnectionProvider endpoint={endpoint}>

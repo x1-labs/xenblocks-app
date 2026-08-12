@@ -37,10 +37,7 @@ export function convertApiAmountToTokenAmount(apiAmount: string): bigint {
   }
 }
 
-export function formatTokenAmount(
-  amount: bigint,
-  decimals: number = 9,
-): string {
+export function formatTokenAmount(amount: bigint, decimals: number = 9): string {
   const negative = amount < 0n;
   const abs = negative ? -amount : amount;
   const divisor = BigInt(10 ** decimals);

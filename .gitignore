@@ -2,33 +2,34 @@
 
 # dependencies
 /node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
-
-# testing
-/coverage
 
 # production
 /dist
-/build
 
 # misc
 .DS_Store
 *.pem
+/.idea/
 
 # debug
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # local env files
 .env*.local
+/.env
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-/.env
-/.idea/
+
+# Playwright MCP session artefacts (snapshots, console logs, screenshots)
+.playwright-mcp/
+
+# Agent instructions are tracked: AGENTS.md is the source of truth and CLAUDE.md
+# imports it, so a fresh clone gets them. Personal overrides go in CLAUDE.local.md.
+CLAUDE.local.md
+.claude/settings.local.json
+# Claude Code git worktrees: full second copies of the repository.
+.claude/worktrees/

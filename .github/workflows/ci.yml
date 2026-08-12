@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# A second push to the same branch supersedes the first.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, lint, format, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/setup-node
+
+      # tsc -b, eslint and prettier --check. Vercel's build runs tsc but not the
+      # other two, so without this nothing enforces them.
+      - name: Run checks
+        run: bun run checks
+
+      # Builds here as well: a type-clean tree can still fail to bundle, and
+      # main deploys automatically on merge.
+      - name: Build
+        run: bun run build

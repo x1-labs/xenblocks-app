@@ -8,21 +8,15 @@ import { PublicKey } from "@solana/web3.js";
  */
 export function deriveAirdropRecordPDA(
   programId: PublicKey,
-  ethAddress: string,
+  ethAddress: string
 ): [PublicKey, number] {
   const ethBytes = Buffer.from(ethAddress.toLowerCase());
   if (ethBytes.length !== 42) {
-    throw new Error(
-      `Invalid ETH address length: ${ethBytes.length}, expected 42`,
-    );
+    throw new Error(`Invalid ETH address length: ${ethBytes.length}, expected 42`);
   }
 
   return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("airdrop_record_v2"),
-      ethBytes.subarray(0, 21),
-      ethBytes.subarray(21, 42),
-    ],
-    programId,
+    [Buffer.from("airdrop_record_v2"), ethBytes.subarray(0, 21), ethBytes.subarray(21, 42)],
+    programId
   );
 }

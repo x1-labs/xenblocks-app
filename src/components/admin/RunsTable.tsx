@@ -1,27 +1,31 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { fetchRuns, type AirdropRun } from "@/lib/admin/fetchRuns";
 import { adminConfig } from "@/lib/admin/config";
 
 export function RunsTable() {
   const [runs, setRuns] = useState<AirdropRun[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  // Starts true: the fetch below begins on mount, so anything else would paint
+  // "No data" for one frame before the request has had a chance to run.
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await fetchRuns(adminConfig.rpcUrl);
-      setRuns(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch runs");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    refresh();
+    let cancelled = false;
+
+    fetchRuns(adminConfig.rpcUrl)
+      .then((result) => {
+        if (!cancelled) setRuns(result);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to fetch runs");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const fmt = (v: bigint) => {
@@ -29,10 +33,8 @@ export function RunsTable() {
     const abs = negative ? -v : v;
     const whole = Number(abs / 1_000_000_000n);
     const prefix = negative ? "-" : "";
-    if (whole >= 1_000_000_000)
-      return `${prefix}${(whole / 1_000_000_000).toFixed(1)}B`;
-    if (whole >= 1_000_000)
-      return `${prefix}${(whole / 1_000_000).toFixed(1)}M`;
+    if (whole >= 1_000_000_000) return `${prefix}${(whole / 1_000_000_000).toFixed(1)}B`;
+    if (whole >= 1_000_000) return `${prefix}${(whole / 1_000_000).toFixed(1)}M`;
     if (whole >= 1_000) return `${prefix}${(whole / 1_000).toFixed(1)}K`;
     return `${prefix}${whole}`;
   };
@@ -67,9 +69,7 @@ export function RunsTable() {
                 runs.length > 0 ? (
                   runs.map((run) => (
                     <tr key={run.runId.toString()}>
-                      <td className="font-mono pr-1">
-                        {run.runId.toString()}
-                      </td>
+                      <td className="font-mono pr-1">{run.runId.toString()}</td>
                       <td className="whitespace-nowrap">
                         {run.runDate.toLocaleDateString(undefined, {
                           month: "short",
@@ -78,21 +78,11 @@ export function RunsTable() {
                           hour12: true,
                         })}
                       </td>
-                      <td className="text-right font-mono px-1">
-                        {run.totalRecipients}
-                      </td>
-                      <td className="text-right font-mono px-1">
-                        {fmt(run.totalXnmAmount)}
-                      </td>
-                      <td className="text-right font-mono px-1">
-                        {fmt(run.totalXblkAmount)}
-                      </td>
-                      <td className="text-right font-mono px-1">
-                        {fmt(run.totalXuniAmount)}
-                      </td>
-                      <td className="text-right font-mono px-1">
-                        {fmt(run.totalNativeAmount)}
-                      </td>
+                      <td className="text-right font-mono px-1">{run.totalRecipients}</td>
+                      <td className="text-right font-mono px-1">{fmt(run.totalXnmAmount)}</td>
+                      <td className="text-right font-mono px-1">{fmt(run.totalXblkAmount)}</td>
+                      <td className="text-right font-mono px-1">{fmt(run.totalXuniAmount)}</td>
+                      <td className="text-right font-mono px-1">{fmt(run.totalNativeAmount)}</td>
                       <td className="px-1">
                         {run.dryRun ? (
                           <span className="text-warning">yes</span>
@@ -104,20 +94,14 @@ export function RunsTable() {
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={8}
-                      className="py-8 text-center text-base-content/40"
-                    >
+                    <td colSpan={8} className="py-8 text-center text-base-content/40">
                       No airdrop runs found
                     </td>
                   </tr>
                 )
               ) : (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="py-8 text-center text-base-content/40"
-                  >
+                  <td colSpan={8} className="py-8 text-center text-base-content/40">
                     {loading ? "Loading..." : "No data"}
                   </td>
                 </tr>

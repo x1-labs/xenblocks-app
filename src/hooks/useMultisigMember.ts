@@ -10,36 +10,38 @@ export function useMultisigMember() {
   const [isMember, setIsMember] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const multisigAddress = adminConfig.multisigAddress;
+  // Without a wallet or a configured multisig there is nothing to look up, so
+  // membership is settled synchronously during render rather than through the
+  // effect below.
+  const resolvedWithoutLookup = !connected || !publicKey || !multisigAddress;
+
   useEffect(() => {
-    if (!connected || !publicKey) {
-      setIsMember(false);
-      setLoading(false);
-      return;
-    }
+    if (!connected || !publicKey || !multisigAddress) return;
 
-    if (!adminConfig.multisigAddress) {
-      setIsMember(false);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    const multisigPda = new PublicKey(adminConfig.multisigAddress);
+    let cancelled = false;
+    const multisigPda = new PublicKey(multisigAddress);
 
     multisig.accounts.Multisig.fromAccountAddress(connection, multisigPda)
       .then((account) => {
-        const found = account.members.some((m) =>
-          new PublicKey(m.key).equals(publicKey),
-        );
-        setIsMember(found);
+        if (cancelled) return;
+        setIsMember(account.members.some((m) => new PublicKey(m.key).equals(publicKey)));
       })
       .catch(() => {
-        setIsMember(false);
+        if (!cancelled) setIsMember(false);
       })
       .finally(() => {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       });
-  }, [connected, publicKey, connection]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [connected, publicKey, connection, multisigAddress]);
+
+  if (resolvedWithoutLookup) {
+    return { isMember: false, loading: false };
+  }
 
   return { isMember, loading };
 }

@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  fetchAllTokenMetadata,
-  TokenMetadata,
-} from "@/lib/solana/tokenMetadata";
+import { fetchAllTokenMetadata, TokenMetadata } from "@/lib/solana/tokenMetadata";
 
 export interface TokenMetadataState {
   xnm: TokenMetadata | null;

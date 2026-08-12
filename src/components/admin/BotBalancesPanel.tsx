@@ -1,8 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
-import {
-  fetchBotBalances,
-  type BotBalance,
-} from "@/lib/admin/fetchBotBalances";
+import { useState, useEffect } from "react";
+import { fetchBotBalances, type BotBalance } from "@/lib/admin/fetchBotBalances";
 import { adminConfig } from "@/lib/admin/config";
 import type { TokenDelta } from "@/lib/admin/fetchDeltas";
 import type { GlobalStateV2 } from "@/lib/admin/fetchGlobalState";
@@ -12,39 +9,40 @@ interface BotBalancesPanelProps {
   globalState: GlobalStateV2 | null;
 }
 
-export function BotBalancesPanel({
-  deltas,
-  globalState,
-}: BotBalancesPanelProps) {
-  const [balances, setBalances] = useState<BotBalance[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function BotBalancesPanel({ deltas, globalState }: BotBalancesPanelProps) {
+  const botAddress = adminConfig.botAddress;
 
-  const refresh = useCallback(async () => {
-    if (!adminConfig.botAddress) {
-      setError("Set VITE_AIRDROP_BOT_AUTH env var");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await fetchBotBalances(
-        adminConfig.rpcUrl,
-        adminConfig.botAddress,
-      );
-      setBalances(result);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch bot balances",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [balances, setBalances] = useState<BotBalance[] | null>(null);
+  // Starts true when there is something to fetch: the request below begins on
+  // mount, so anything else would paint "No data" for one frame first.
+  const [loading, setLoading] = useState(Boolean(botAddress));
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // A missing env var is a build-time fact, not something the effect discovers,
+  // so it is derived here rather than written into state on mount.
+  const error = botAddress ? fetchError : "Set VITE_AIRDROP_BOT_AUTH env var";
 
   useEffect(() => {
-    refresh();
-  }, []);
+    if (!botAddress) return;
+
+    let cancelled = false;
+
+    fetchBotBalances(adminConfig.rpcUrl, botAddress)
+      .then((result) => {
+        if (!cancelled) setBalances(result);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled)
+          setFetchError(err instanceof Error ? err.message : "Failed to fetch bot balances");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [botAddress]);
 
   const fmt = (v: bigint) => {
     const negative = v < 0n;
@@ -52,10 +50,8 @@ export function BotBalancesPanel({
     const whole = Number(abs / 1_000_000_000n);
     if (whole === 0) return "-";
     const prefix = negative ? "-" : "";
-    if (whole >= 1_000_000_000)
-      return `${prefix}${(whole / 1_000_000_000).toFixed(1)}B`;
-    if (whole >= 1_000_000)
-      return `${prefix}${(whole / 1_000_000).toFixed(1)}M`;
+    if (whole >= 1_000_000_000) return `${prefix}${(whole / 1_000_000_000).toFixed(1)}B`;
+    if (whole >= 1_000_000) return `${prefix}${(whole / 1_000_000).toFixed(1)}M`;
     if (whole >= 1_000) return `${prefix}${(whole / 1_000).toFixed(1)}K`;
     return `${prefix}${whole}`;
   };
@@ -109,9 +105,7 @@ export function BotBalancesPanel({
                 balances.map((b) => {
                   const airdropDelta = airdropDeltaByToken[b.name];
                   const shortfall =
-                    airdropDelta !== undefined
-                      ? b.balance - airdropDelta
-                      : undefined;
+                    airdropDelta !== undefined ? b.balance - airdropDelta : undefined;
                   return (
                     <tr key={b.name}>
                       <td className="font-medium">{b.name}</td>
@@ -126,19 +120,14 @@ export function BotBalancesPanel({
                             : "text-base-content/40"
                         }`}
                       >
-                        {shortfall !== undefined && shortfall < 0n
-                          ? fmt(-shortfall)
-                          : "-"}
+                        {shortfall !== undefined && shortfall < 0n ? fmt(-shortfall) : "-"}
                       </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td
-                    colSpan={4}
-                    className="py-8 text-center text-base-content/40"
-                  >
+                  <td colSpan={4} className="py-8 text-center text-base-content/40">
                     {loading ? "Loading..." : "No data"}
                   </td>
                 </tr>

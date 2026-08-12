@@ -5,10 +5,19 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "isolatedModules": true,
+    "strict": true,
+    "types": ["node"],
+
+    // `composite` is what lets the root tsconfig list this project in
+    // `references`, and it requires emit -- a referenced project may not set
+    // `noEmit` (TS6310). Nothing consumes the output, so it goes to a scratch
+    // directory rather than polluting the repo root. This is also why
+    // `allowImportingTsExtensions` is absent: it is only valid alongside
+    // `noEmit`, and vite.config.ts imports no .ts paths anyway.
     "composite": true,
-    "strict": true
+    "outDir": "./node_modules/.tmp/tsconfig-node",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
   "include": ["vite.config.ts"]
 }
